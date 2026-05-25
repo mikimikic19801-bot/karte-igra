@@ -1,274 +1,835 @@
 <!DOCTYPE html>
-<html lang="sr">
+<html lang="sr" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>High-Low Elite: Jackpot</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f0c29">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OddsGuard AI - Domaće Kladionice Uživo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fontovi i Ikonice (Lucide Icons) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --bg: #050505;
-            --accent: #00d2ff;
-            --neon: #9d50bb;
-            --win: #00ff88;
-            --lose: #ff0055;
-            --tie: #f59e0b;
-            --gold: #ffd700;
-        }
-
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #000;
-            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050505 100%);
-            color: white; margin: 0; padding: 0;
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
-
-        .container { width: 100%; max-width: 450px; padding: 20px; box-sizing: border-box; text-align: center; z-index: 2; }
-
-        /* Stats & Header */
-        .stat-bar {
-            display: flex; justify-content: space-between;
-            background: rgba(255,255,255,0.03); padding: 15px;
-            border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 20px; backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        .stat-val { font-weight: 900; color: var(--accent); font-size: 1.3rem; text-shadow: 0 0 10px var(--accent); }
-        .label { font-size: 10px; text-transform: uppercase; color: #888; font-weight: bold; letter-spacing: 1px; }
-
-        /* Card Section */
-        .card-container { margin: 20px auto; width: 150px; height: 215px; perspective: 1000px; }
-        .card {
-            width: 100%; height: 100%;
-            background: #1a1a2e; border-radius: 20px;
-            border: 2px solid var(--neon);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            font-size: 60px; font-weight: 900;
-            box-shadow: 0 0 40px rgba(157, 80, 187, 0.3);
-            position: relative; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
         }
-        .card-suit { font-size: 24px; position: absolute; top: 15px; left: 15px; }
-        .card-suit-bottom { font-size: 24px; position: absolute; bottom: 15px; right: 15px; transform: rotate(180deg); }
-
-        /* Buttons */
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        .btn {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 18px; padding: 12px; color: white; cursor: pointer; transition: 0.2s;
-            display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden;
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
         }
-        .btn:active { transform: scale(0.92); }
-        .btn.high { border-bottom: 4px solid var(--win); }
-        .btn.low { border-bottom: 4px solid var(--lose); }
-        .btn.tie { border-bottom: 4px solid var(--tie); grid-column: span 2; }
-        .btn-odds { font-size: 18px; font-weight: 900; color: #fff; margin-top: 4px; }
-
-        /* Animations & Messages */
-        .streak-fire {
-            font-size: 24px; font-weight: 900; color: #ffae00;
-            text-shadow: 0 0 10px #ff4e00, 0 0 20px #ffae00;
-            margin-bottom: 10px; display: none; animation: pulse 0.5s infinite;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
         }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-        .message { margin-top: 15px; font-size: 14px; font-weight: bold; min-height: 20px; text-transform: uppercase; }
-
-        input {
-            background: rgba(0,0,0,0.6); border: 1px solid #333; color: white;
-            text-align: center; font-size: 22px; width: 130px; padding: 12px;
-            border-radius: 12px; outline: none; margin-top: 5px; font-weight: 900;
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
         }
-
-        #collect-btn {
-            margin-top: 20px; background: linear-gradient(45deg, var(--win), var(--accent));
-            border: none; padding: 16px; border-radius: 18px; font-weight: 900;
-            color: #000; cursor: pointer; width: 100%; font-size: 16px;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4); text-transform: uppercase;
-        }
-
-        /* Coin Rain */
-        .coin {
-            position: fixed; top: -50px; width: 30px; height: 30px;
-            background: var(--gold); border-radius: 50%;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 0 10px var(--gold);
-            z-index: 1; pointer-events: none;
-            display: flex; justify-content: center; align-items: center; color: rgba(0,0,0,0.4); font-weight: bold;
+        .pulse-dot {
+            animation: pulse-ring 2s infinite ease-in-out;
         }
     </style>
 </head>
-<body>
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-black">
 
-<div id="coin-layer"></div>
+    <!-- -->
+    <header class="border-b border-slate-800 bg-[#0f1524]/80 backdrop-blur-md sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-emerald-500 to-teal-400 p-2.5 rounded-xl shadow-lg shadow-emerald-500/10">
+                    <i data-lucide="trending-down" class="w-6 h-6 text-slate-900 stroke-[2.5]"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                        OddsGuard <span class="text-emerald-400">AI</span>
+                    </h1>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-wider uppercase">Domaće Kvote & Arbitraža</p>
+                </div>
+            </div>
 
-<div class="container">
-    <div class="stat-bar">
-        <div><div class="label">💳 Banka</div><div id="balance" class="stat-val">100.00</div></div>
-        <div style="text-align: right;"><div class="label">💰 Profit</div><div id="profit" class="stat-val" style="color:white">0.00</div></div>
-    </div>
-
-    <div id="streak-ui" class="streak-fire">🔥 COMBO x3!</div>
-
-    <div class="card-container">
-        <div class="card" id="card">
-            <div class="card-suit" id="suit-top">♠</div>
-            <span id="card-val">8</span>
-            <div class="card-suit-bottom" id="suit-bottom">♠</div>
+            <!-- Status sistema -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs">
+                <div class="bg-slate-900/60 border border-slate-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-slate-400">Izvor podataka:</span>
+                    <span id="system-status" class="font-semibold text-emerald-400">Simulator</span>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span class="text-slate-400">Arbitraže:</span>
+                    <span id="stat-arb-count" class="font-semibold text-amber-400">0</span>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <i data-lucide="trending-down" class="w-3.5 h-3.5 text-rose-400"></i>
+                    <span class="text-slate-400">Padovi:</span>
+                    <span id="stat-drop-count" class="font-semibold text-rose-400">0</span>
+                </div>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <div id="msg" class="message">Postavi ulog i kreni!</div>
+    <!-- -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-    <div style="margin-top: 10px;">
-        <input type="number" id="stake" value="10">
-    </div>
+        <!-- Leva kolona: Kontrola i Filteri -->
+        <section class="lg:col-span-4 space-y-6">
+            <!-- Kontrolna Tabla & Modovi -->
+            <div class="bg-[#111827] border border-slate-800/80 rounded-2xl p-5 shadow-xl">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i> Izvor Podataka
+                </h2>
 
-    <div class="controls">
-        <button id="btn-high" class="btn high" onclick="play('high')">
-            <span class="label">VEĆA</span>
-            <span id="odds-high" class="btn-odds">--</span>
-        </button>
-        <button id="btn-low" class="btn low" onclick="play('low')">
-            <span class="label">MANJA</span>
-            <span id="odds-low" class="btn-odds">--</span>
-        </button>
-        <button id="btn-tie" class="btn tie" onclick="play('tie')">
-            <span class="label">ISTA (TIE)</span>
-            <span id="odds-tie" class="btn-odds">12.00</span>
-        </button>
-    </div>
-
-    <button onclick="collect()" id="collect-btn" style="display:none;">CASH OUT 💸</button>
-</div>
-
-<script>
-    const cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
-    const suits = ['♠', '♣', '♥', '♦'];
-    let currentVal = 8;
-    let balance = 100.00;
-    let currentProfit = 0;
-    let streak = 0;
-
-    function updateOdds() {
-        const highCount = cards.filter(c => c > currentVal).length;
-        const lowCount = cards.filter(c => c < currentVal).length;
-        const qHigh = highCount > 0 ? (12.35 / highCount).toFixed(2) : "0.00";
-        const qLow = lowCount > 0 ? (12.35 / lowCount).toFixed(2) : "0.00";
-        
-        document.getElementById('odds-high').innerText = qHigh;
-        document.getElementById('odds-low').innerText = qLow;
-        document.getElementById('btn-high').disabled = highCount === 0;
-        document.getElementById('btn-low').disabled = lowCount === 0;
-    }
-
-    function createCoins() {
-        for(let i=0; i<15; i++) {
-            setTimeout(() => {
-                const coin = document.createElement('div');
-                coin.className = 'coin';
-                coin.innerText = '$';
-                coin.style.left = Math.random() * 100 + 'vw';
-                coin.style.animation = `drop ${Math.random() * 2 + 1}s linear forwards`;
-                document.getElementById('coin-layer').appendChild(coin);
-                setTimeout(() => coin.remove(), 3000);
-            }, i * 100);
-        }
-    }
-
-    // Dodavanje CSS animacije za kovanice kroz JS
-    const style = document.createElement('style');
-    style.innerHTML = `@keyframes drop { to { transform: translateY(110vh) rotate(720deg); } }`;
-    document.head.appendChild(style);
-
-    function play(choice) {
-        const stakeInput = document.getElementById('stake');
-        let stake = parseFloat(stakeInput.value);
-
-        if (currentProfit === 0) {
-            if (isNaN(stake) || stake <= 0 || balance < stake) return;
-            balance -= stake;
-            currentProfit = stake;
-            stakeInput.disabled = true;
-        }
-
-        const nextVal = cards[Math.floor(Math.random() * cards.length)];
-        const nextSuit = suits[Math.floor(Math.random() * suits.length)];
-        const odds = parseFloat(document.getElementById('odds-' + choice).innerText);
-        
-        const cardEl = document.getElementById('card');
-        cardEl.style.transform = "rotateY(90deg) scale(1.1)";
-        
-        setTimeout(() => {
-            let isWin = (choice === 'high' && nextVal > currentVal) || 
-                        (choice === 'low' && nextVal < currentVal) || 
-                        (choice === 'tie' && nextVal === currentVal);
-            
-            if (isWin) {
-                currentProfit *= odds;
-                streak++;
-                createCoins();
+                <!-- Prekidač Modova sa 2 opcije -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl mb-4 border border-slate-800">
+                    <button id="btn-mode-sim" onclick="setMode('simulator')" class="py-2 text-xs font-semibold rounded-lg transition-all duration-200 bg-emerald-500 text-slate-950 shadow-md">
+                        <i data-lucide="cpu" class="w-3.5 h-3.5 inline mr-1"></i> Simulator
+                    </button>
+                    <button id="btn-mode-local" onclick="setMode('local')" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all duration-200">
+                        <i data-lucide="home" class="w-3.5 h-3.5 inline mr-1"></i> Domaće
+                    </button>
+                </div>
                 
-                if (streak >= 3) {
-                    document.getElementById('streak-ui').innerText = `🔥 COMBO x${streak}!`;
-                    document.getElementById('streak-ui').style.display = "block";
-                }
+                <p id="mode-desc-text" class="text-[11px] text-slate-400 leading-relaxed">
+                    Trenutno simuliramo promene i analiziramo kvote u pretraživaču.
+                </p>
+            </div>
 
-                document.getElementById('msg').innerText = streak > 2 ? "LUDILOOO! SAMO GRUVAJ!" : "TAČNO! DOBITAK RASTE!";
-                document.getElementById('msg').style.color = "var(--win)";
-                document.getElementById('collect-btn').style.display = "block";
+            <!-- Filteri alarma -->
+            <div class="bg-[#111827] border border-slate-800/80 rounded-2xl p-5 shadow-xl">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                    <i data-lucide="filter" class="w-4 h-4 text-emerald-400"></i> Parametri Alarma
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-xs font-medium mb-1">
+                            <span class="text-slate-400">Min. Arbitražni Profit:</span>
+                            <span id="lbl-min-arb" class="text-emerald-400 font-bold">1.5%</span>
+                        </div>
+                        <input type="range" id="range-min-arb" min="0.1" max="10" step="0.1" value="1.5" oninput="updateFilters()" class="w-full accent-emerald-500 bg-slate-950 h-1 rounded-lg cursor-pointer">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs font-medium mb-1">
+                            <span class="text-slate-400">Min. Pad Kvote:</span>
+                            <span id="lbl-min-drop" class="text-rose-400 font-bold">8%</span>
+                        </div>
+                        <input type="range" id="range-min-drop" min="2" max="30" step="1" value="8" oninput="updateFilters()" class="w-full accent-rose-500 bg-slate-950 h-1 rounded-lg cursor-pointer">
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-800 space-y-2">
+                        <label class="flex items-center gap-2.5 cursor-pointer">
+                            <input type="checkbox" id="chk-audio" checked class="rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-0 w-4 h-4">
+                            <span class="text-xs text-slate-300">Zvučni alarmi (Beep)</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 cursor-pointer">
+                            <input type="checkbox" id="chk-tts" checked class="rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-0 w-4 h-4">
+                            <span class="text-xs text-slate-300">Glasovna obaveštenja (AI Glas)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Brzo Objašnjenje -->
+            <div class="bg-[#111827]/50 border border-slate-800/50 rounded-2xl p-5 text-xs text-slate-400 space-y-2">
+                <h3 class="font-bold text-slate-300 flex items-center gap-1">
+                    <i data-lucide="info" class="w-3.5 h-3.5 text-emerald-400"></i> Kako radi arbitraža?
+                </h3>
+                <p>Kada različite domaće kladionice (npr. Admiral i Mozzart) postave kvote tako da je zbir njihovih recipročnih vrednosti manji od 1, obezbeđen je siguran profit bez obzira na ishod utakmice.</p>
+                <p class="text-emerald-400 font-mono">Formula: 1/K1 + 1/KX + 1/K2 < 1.0</p>
+            </div>
+        </section>
+
+        <!-- Desna kolona: Tabele i Kalkulator -->
+        <!-- -->
+        <section class="lg:col-span-8 space-y-6">
+
+            <!-- Tabovi navigacija -->
+            <div class="flex border-b border-slate-800 gap-1">
+                <button onclick="switchTab('arbitrage')" id="tab-btn-arbitrage" class="px-5 py-3 text-xs font-bold border-b-2 border-emerald-500 text-white flex items-center gap-2 transition-all">
+                    <i data-lucide="zap" class="w-4 h-4 text-emerald-400"></i> Arbitraže (Surebets)
+                </button>
+                <button onclick="switchTab('drops')" id="tab-btn-drops" class="px-5 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+                    <i data-lucide="trending-down" class="w-4 h-4 text-rose-400"></i> Padovi Kvota
+                </button>
+                <button onclick="switchTab('calculator')" id="tab-btn-calculator" class="px-5 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+                    <i data-lucide="calculator" class="w-4 h-4 text-blue-400"></i> Kalkulator
+                </button>
+            </div>
+
+            <!-- TAB 1: ARBITRAŽNE KVOTE -->
+            <div id="tab-arbitrage" class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Detektovani sigurni profiti</h3>
+                    <button onclick="clearArbitrageTable()" class="text-xs text-slate-500 hover:text-rose-400 flex items-center gap-1 transition-colors">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Očisti listu
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto bg-[#111827] border border-slate-800 rounded-2xl shadow-xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-400 bg-slate-950/40">
+                                <th class="p-4">Događaj</th>
+                                <th class="p-4 text-center">Kladionice & Kvote</th>
+                                <th class="p-4 text-right">Profit (%)</th>
+                                <th class="p-4 text-center">Akcija</th>
+                            </tr>
+                        </thead>
+                        <tbody id="arbitrage-tbody" class="divide-y divide-slate-800/60 text-xs">
+                            <tr id="no-arb-row">
+                                <td colspan="4" class="p-8 text-center text-slate-500">
+                                    <i data-lucide="search" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+                                    Nema detektovanih arbitražnih kvota. Čekanje na osvežavanje podataka...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: PADOVI KVOTA -->
+            <!-- -->
+            <div id="tab-drops" class="space-y-4 hidden">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Detektovani nagli padovi kvota</h3>
+                    <button onclick="clearDropsTable()" class="text-xs text-slate-500 hover:text-rose-400 flex items-center gap-1 transition-colors">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Očisti listu
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto bg-[#111827] border border-slate-800 rounded-2xl shadow-xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-400 bg-slate-950/40">
+                                <th class="p-4">Događaj / Ishod</th>
+                                <th class="p-4">Kladionica</th>
+                                <th class="p-4 text-center">Prvobitna kvota</th>
+                                <th class="p-4 text-center">Trenutna kvota</th>
+                                <th class="p-4 text-right text-rose-400">Pad %</th>
+                                <th class="p-4 text-center">Vreme</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drops-tbody" class="divide-y divide-slate-800/60 text-xs">
+                            <tr id="no-drops-row">
+                                <td colspan="6" class="p-8 text-center text-slate-500">
+                                    <i data-lucide="trending-down" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+                                    Nema detektovanih padova kvota.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: SUREBET KALKULATOR -->
+            <!-- -->
+            <div id="tab-calculator" class="bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl hidden">
+                <h3 class="text-base font-bold text-slate-200 mb-4 flex items-center gap-2">
+                    <i data-lucide="calculator" class="w-5 h-5 text-emerald-400"></i> Kalkulator Sigurne Opklade
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-5 space-y-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Unos parametara</h4>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Ukupan Ulog (RSD):</label>
+                            <input type="number" id="calc-total-stake" value="10000" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" oninput="runManualCalculator()">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Kvota 1 (Domaćin):</label>
+                                <input type="number" id="calc-odds-1" value="2.15" step="0.01" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" oninput="runManualCalculator()">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Kvota 2 (Gost):</label>
+                                <input type="number" id="calc-odds-2" value="2.05" step="0.01" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" oninput="runManualCalculator()">
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="calc-three-way" class="rounded border-slate-800 bg-slate-900 text-emerald-500 focus:ring-0" onchange="toggleCalcThreeWay()">
+                                <span class="text-xs text-slate-400">Uključi nerešeno (X) za 3-way sportove</span>
+                            </label>
+                        </div>
+                        <div id="calc-odds-3-container" class="hidden">
+                            <label class="block text-xs text-slate-400 mb-1">Kvota X (Nerešeno):</label>
+                            <input type="number" id="calc-odds-3" value="3.40" step="0.01" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" oninput="runManualCalculator()">
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-7 flex flex-col justify-between">
+                        <div id="calc-result-box" class="bg-slate-950/40 border border-slate-800 rounded-xl p-5 flex-1 space-y-4">
+                            <!-- Biće generisano putem JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal konzola uživo -->
+            <div class="bg-[#0c101b] border border-slate-800 rounded-2xl p-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></span> Monitor Aktivnosti
+                    </span>
+                    <button onclick="clearLogs()" class="text-[10px] text-slate-500 hover:text-slate-300">Očisti</button>
+                </div>
+                <div id="terminal-logs" class="h-28 overflow-y-auto font-mono text-[11px] text-emerald-400 space-y-1 p-2 bg-slate-950 rounded-lg border border-slate-900">
+                    <div>[SISTEM] OddsGuard AI je uspešno pokrenut u pretraživaču.</div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Iskačuća obaveštenja (Toasts) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm w-full"></div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-[#080b13] py-6 text-center text-xs text-slate-500 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2026 OddsGuard AI. Korišćenje isključivo u statističke i edukativne svrhe.</p>
+            <p class="text-[11px] text-slate-600">Svi podaci sa skrejpera su vlasništvo kladionica AdmiralBet i Mozzart.</p>
+        </div>
+    </footer>
+
+    <!-- -->
+    <script>
+        // Globalne Promenljive
+        let currentMode = 'simulator'; // 'simulator' ili 'local' (Domaće)
+        let updateInterval = null;
+        let simInterval = null;
+        let logsContainer = document.getElementById('terminal-logs');
+        let arbitrageMatches = [];
+        let detectedDrops = [];
+        
+        let minArbitrageProfit = 1.5;
+        let minDropPercent = 8;
+        let soundAlertsEnabled = true;
+        let ttsAlertsEnabled = true;
+
+        window.onload = function() {
+            lucide.createIcons();
+            setMode('simulator');
+            runManualCalculator();
+        };
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnSim = document.getElementById('btn-mode-sim');
+            const btnLocal = document.getElementById('btn-mode-local');
+            const statusIndicator = document.getElementById('system-status');
+            const desc = document.getElementById('mode-desc-text');
+
+            clearInterval(updateInterval);
+            clearInterval(simInterval);
+
+            if (mode === 'simulator') {
+                btnSim.className = "py-2 text-xs font-semibold rounded-lg transition-all duration-200 bg-emerald-500 text-slate-950 shadow-md";
+                btnLocal.className = "py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all duration-200";
+                statusIndicator.innerText = "Simulator aktivan";
+                statusIndicator.className = "font-semibold text-emerald-400";
+                desc.innerText = "Simulirani mod rada u brauzeru. Generiše hipotetičke promene u realnom vremenu.";
+                
+                logToTerminal("[SYSTEM] Aktiviran Simulator Mod.");
+                startSimulator();
+            } else if (mode === 'local') {
+                btnLocal.className = "py-2 text-xs font-semibold rounded-lg transition-all duration-200 bg-emerald-500 text-slate-950 shadow-md";
+                btnSim.className = "py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all duration-200";
+                statusIndicator.innerText = "Uživo Domaće";
+                statusIndicator.className = "font-semibold text-blue-400";
+                desc.innerText = "Skenira prave kvote AdmiralBet-a i Mozzarta preko tvog bezbednog Vercel Serverless kanala.";
+
+                logToTerminal("[SYSTEM] Pokrenuto skrejpovanje domaćih kladionica...");
+                startLocalCloudUpdates();
+            }
+            lucide.createIcons();
+        }
+
+        function analyzeArbitrage(match) {
+            if (match.bookmakers.length < 2) return;
+
+            let bestHome = { bookmaker: '', odds: 0 };
+            let bestAway = { bookmaker: '', odds: 0 };
+            let bestDraw = { bookmaker: '', odds: 0 };
+
+            match.bookmakers.forEach(bm => {
+                if (bm.odds.home > bestHome.odds) {
+                    bestHome = { bookmaker: bm.title, odds: bm.odds.home };
+                }
+                if (bm.odds.away > bestAway.odds) {
+                    bestAway = { bookmaker: bm.title, odds: bm.odds.away };
+                }
+                if (bm.odds.draw && bm.odds.draw > bestDraw.odds) {
+                    bestDraw = { bookmaker: bm.title, odds: bm.odds.draw };
+                }
+            });
+
+            let is3Way = (bestDraw.odds > 0);
+            let margin = is3Way ? 
+                ((1 / bestHome.odds) + (1 / bestAway.odds) + (1 / bestDraw.odds)) :
+                ((1 / bestHome.odds) + (1 / bestAway.odds));
+
+            if (margin < 1.0) {
+                let profitPercent = ((1 / margin) - 1) * 100;
+
+                if (profitPercent >= minArbitrageProfit) {
+                    let arbId = `${match.id}-${is3Way ? '3w' : '2w'}`;
+                    
+                    if (!arbitrageMatches.some(a => a.id === arbId)) {
+                        let newArb = {
+                            id: arbId,
+                            time: new Date().toLocaleTimeString(),
+                            sport: match.sport,
+                            home_team: match.home_team,
+                            away_team: match.away_team,
+                            is3Way: is3Way,
+                            profit: profitPercent.toFixed(2),
+                            outcomes: [
+                                { label: '1 (Domaćin)', bookmaker: bestHome.bookmaker, odds: bestHome.odds },
+                                { label: '2 (Gost)', bookmaker: bestAway.bookmaker, odds: bestAway.odds }
+                            ]
+                        };
+
+                        if (is3Way) {
+                            newArb.outcomes.splice(1, 0, { label: 'X (Nerešeno)', bookmaker: bestDraw.bookmaker, odds: bestDraw.odds });
+                        }
+
+                        arbitrageMatches.unshift(newArb);
+                        updateArbitrageTable();
+                        triggerNotification('arbitrage', `Pronađena Arbitraža! Profit: ${newArb.profit}% na meču ${match.home_team} - ${match.away_team}`);
+                        logToTerminal(`[ARBITRAŽA] ${match.home_team} vs ${match.away_team} | PROFIT: ${newArb.profit}%`);
+                    }
+                }
+            }
+        }
+
+        function updateArbitrageTable() {
+            const tbody = document.getElementById('arbitrage-tbody');
+            const noRow = document.getElementById('no-arb-row');
+            document.getElementById('stat-arb-count').innerText = arbitrageMatches.length;
+
+            if (arbitrageMatches.length > 0) {
+                if (noRow) noRow.remove();
+                if (arbitrageMatches.length > 15) arbitrageMatches.pop();
+
+                tbody.innerHTML = '';
+                arbitrageMatches.forEach(arb => {
+                    let outcomesHtml = '';
+                    arb.outcomes.forEach(out => {
+                        outcomesHtml += `
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-center">
+                                <span class="text-[10px] text-slate-400 block">${out.label}</span>
+                                <span class="font-bold text-emerald-400">${out.odds}</span>
+                                <span class="text-[9px] text-slate-500 block truncate" title="${out.bookmaker}">${out.bookmaker}</span>
+                            </div>
+                        `;
+                    });
+
+                    let tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-900/40 transition-colors";
+                    tr.innerHTML = `
+                        <td class="p-4">
+                            <span class="text-slate-200 font-semibold block">${arb.home_team} - ${arb.away_team}</span>
+                            <span class="bg-slate-800/80 px-2 py-0.5 rounded text-[9px] text-slate-300 font-semibold uppercase">${arb.sport}</span>
+                        </td>
+                        <td class="p-4">
+                            <div class="grid grid-cols-${arb.outcomes.length} gap-2">
+                                ${outcomesHtml}
+                            </div>
+                        </td>
+                        <td class="p-4 text-right font-bold text-emerald-400 text-sm">
+                            +${arb.profit}%
+                        </td>
+                        <td class="p-4 text-center">
+                            <button onclick="openInCalculator(${JSON.stringify(arb).replace(/"/g, '&quot;')})" class="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all inline-flex items-center gap-1">
+                                <i data-lucide="calculator" class="w-3.5 h-3.5"></i> Izračunaj
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons();
             } else {
-                currentProfit = 0;
-                streak = 0;
-                document.getElementById('streak-ui').style.display = "none";
-                document.getElementById('msg').innerText = "PROMAŠAJ! POKUŠAJ PONOVO.";
-                document.getElementById('msg').style.color = "var(--lose)";
-                resetRound();
+                tbody.innerHTML = `
+                    <tr id="no-arb-row">
+                        <td colspan="4" class="p-8 text-center text-slate-500">
+                            <i data-lucide="search" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+                            Nema detektovanih arbitražnih kvota. Čekanje na osvežavanje podataka...
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        function checkDroppingOdds(match, initialOdds, currentOdds, bookmaker) {
+            let dropPercent = ((initialOdds - currentOdds) / initialOdds) * 100;
+
+            if (dropPercent >= minDropPercent) {
+                let dropId = `${match.id}-${bookmaker}-${currentOdds}`;
+                
+                if (!detectedDrops.some(d => d.id === dropId)) {
+                    let newDrop = {
+                        id: dropId,
+                        time: new Date().toLocaleTimeString(),
+                        event: `${match.home_team} - ${match.away_team}`,
+                        bookmaker: bookmaker,
+                        initial: initialOdds.toFixed(2),
+                        current: currentOdds.toFixed(2),
+                        drop: dropPercent.toFixed(1)
+                    };
+
+                    detectedDrops.unshift(newDrop);
+                    updateDropsTable();
+                    triggerNotification('drop', `Pad Kvote! Kladionica ${bookmaker} spustila kvotu na meč ${newDrop.event} za ${newDrop.drop}%`);
+                    logToTerminal(`[PAD] ${newDrop.event} | ${bookmaker} kvota pala sa ${newDrop.initial} na ${newDrop.current} (Pad: ${newDrop.drop}%)`);
+                }
+            }
+        }
+
+        function updateDropsTable() {
+            const tbody = document.getElementById('drops-tbody');
+            const noRow = document.getElementById('no-drops-row');
+            document.getElementById('stat-drop-count').innerText = detectedDrops.length;
+
+            if (detectedDrops.length > 0) {
+                if (noRow) noRow.remove();
+                if (detectedDrops.length > 15) detectedDrops.pop();
+
+                tbody.innerHTML = '';
+                detectedDrops.forEach(drop => {
+                    let tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-900/40 transition-colors";
+                    tr.innerHTML = `
+                        <td class="p-4 font-semibold text-slate-200">${drop.event}</td>
+                        <td class="p-4 text-slate-400 font-medium">${drop.bookmaker}</td>
+                        <td class="p-4 text-center text-slate-500 font-mono">${drop.initial}</td>
+                        <td class="p-4 text-center text-slate-200 font-mono font-bold">${drop.current}</td>
+                        <td class="p-4 text-right text-rose-400 font-bold text-sm">
+                            <i data-lucide="trending-down" class="w-3.5 h-3.5 inline mr-1"></i>-${drop.drop}%
+                        </td>
+                        <td class="p-4 text-center text-slate-500 text-[10px]">${drop.time}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons();
+            } else {
+                tbody.innerHTML = `
+                    <tr id="no-drops-row">
+                        <td colspan="6" class="p-8 text-center text-slate-500">
+                            <i data-lucide="trending-down" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+                            Nema detektovanih padova kvota.
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        function triggerNotification(type, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let colorClass = type === 'arbitrage' ? 'border-emerald-500/30 bg-[#0c1914]/95 text-emerald-400' : 'border-rose-500/30 bg-[#1c0e0f]/95 text-rose-400';
+            let icon = type === 'arbitrage' ? 'zap' : 'trending-down';
+
+            toast.className = `p-4 border rounded-xl shadow-2xl flex gap-3 items-start transition-all duration-300 transform translate-y-2 opacity-0 ${colorClass}`;
+            toast.innerHTML = `
+                <div class="p-1.5 rounded-lg bg-slate-900 flex-shrink-0">
+                    <i data-lucide="${icon}" class="w-4 h-4"></i>
+                </div>
+                <div class="flex-1 text-xs">
+                    <p class="font-bold uppercase tracking-wider text-[10px] mb-0.5">${type === 'arbitrage' ? 'Uživo Arbitraža' : 'Nagli Pad Kvote'}</p>
+                    <p class="text-slate-300 font-medium">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-slate-500 hover:text-slate-300">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 6000);
+
+            if (soundAlertsEnabled) {
+                playBeep(type);
             }
 
-            currentVal = nextVal;
-            renderCard(nextVal, nextSuit);
-            updateUI();
-            cardEl.style.transform = "rotateY(0deg) scale(1)";
-        }, 300);
-    }
+            if (ttsAlertsEnabled && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let textToSpeak = type === 'arbitrage' ? "Arbitraža pronađena." : "Pad kvote detektovan.";
+                let speech = new SpeechSynthesisUtterance(textToSpeak);
+                speech.lang = 'sr-RS';
+                speech.rate = 1.1;
+                window.speechSynthesis.speak(speech);
+            }
+        }
 
-    function renderCard(val, suit) {
-        let d = val;
-        if (val === 11) d = "J"; if (val === 12) d = "Q"; if (val === 13) d = "K"; if (val === 14) d = "A";
-        document.getElementById('card-val').innerText = d;
-        document.getElementById('suit-top').innerText = suit;
-        document.getElementById('suit-bottom').innerText = suit;
-        const color = (suit === '♥' || suit === '♦') ? 'var(--lose)' : 'white';
-        document.getElementById('card').style.borderColor = (suit === '♥' || suit === '♦') ? 'var(--lose)' : 'var(--neon)';
-        document.getElementById('card').style.color = color;
-    }
+        function playBeep(type) {
+            try {
+                let context = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = context.createOscillator();
+                let gain = context.createGain();
 
-    function collect() {
-        balance += currentProfit;
-        currentProfit = 0;
-        streak = 0;
-        document.getElementById('streak-ui').style.display = "none";
-        document.getElementById('msg').innerText = "PARE SU U DŽEPU! 💰";
-        document.getElementById('msg').style.color = "var(--gold)";
-        resetRound();
-        updateUI();
-        createCoins(); // Još jedna kiša za proslavu isplate
-    }
+                osc.connect(gain);
+                gain.connect(context.destination);
 
-    function resetRound() {
-        document.getElementById('collect-btn').style.display = "none";
-        document.getElementById('stake').disabled = false;
-    }
+                if (type === 'arbitrage') {
+                    osc.frequency.setValueAtTime(880, context.currentTime);
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.08, context.currentTime);
+                    osc.start();
+                    osc.stop(context.currentTime + 0.15);
+                } else {
+                    osc.frequency.setValueAtTime(500, context.currentTime);
+                    osc.type = 'triangle';
+                    gain.gain.setValueAtTime(0.1, context.currentTime);
+                    osc.start();
+                    osc.stop(context.currentTime + 0.3);
+                }
+            } catch (e) {
+                console.log("AudioContext sprečen od strane pretraživača pre interakcije.");
+            }
+        }
 
-    function updateUI() {
-        document.getElementById('balance').innerText = balance.toFixed(2);
-        document.getElementById('profit').innerText = currentProfit.toFixed(2);
-        updateOdds();
-    }
+        async function fetchLocalCloudOdds() {
+            document.getElementById('system-status').innerText = "Osvežavanje...";
+            document.getElementById('system-status').className = "font-semibold text-blue-400";
+            logToTerminal("[SKREJPER] Povlačenje najnovijih kvota iz AdmiralBeta i Mozzarta...");
 
-    updateUI();
-</script>
+            try {
+                const response = await fetch('/api/odds');
+                if (!response.ok) {
+                    throw new Error("Greška u povezivanju sa Vercel serverom.");
+                }
+
+                const data = await response.json();
+                logToTerminal(`[SKREJPER] Uspešno skrejpovano ${data.length} utakmica sa Admiral Beta.`);
+
+                data.forEach(m => {
+                    analyzeArbitrage(m);
+                });
+
+                document.getElementById('system-status').innerText = "Uživo Domaće";
+                document.getElementById('system-status').className = "font-semibold text-emerald-400";
+            } catch (err) {
+                console.error(err);
+                logToTerminal(`[GREŠKA] Problem sa skrejpovanjem: ${err.message}`);
+                document.getElementById('system-status').innerText = "Greška u skrejpovanju";
+                document.getElementById('system-status').className = "font-semibold text-rose-500";
+            }
+        }
+
+        function startLocalCloudUpdates() {
+            fetchLocalCloudOdds();
+            updateInterval = setInterval(fetchLocalCloudOdds, 30000); // Automatski na svakih 30 sekundi
+        }
+
+        function startSimulator() {
+            let mockMatches = [
+                {
+                    id: "sim-1",
+                    home_team: "Crvena Zvezda",
+                    away_team: "Partizan",
+                    sport: "Fudbal",
+                    bookmakers: [
+                        { title: "AdmiralBet", odds: { home: 1.95, draw: 3.40, away: 3.80 } },
+                        { title: "Mozzart", odds: { home: 1.85, draw: 3.50, away: 4.10 } }
+                    ]
+                },
+                {
+                    id: "sim-2",
+                    home_team: "Real Madrid",
+                    away_team: "Barcelona",
+                    sport: "Fudbal",
+                    bookmakers: [
+                        { title: "AdmiralBet", odds: { home: 2.10, draw: 3.30, away: 3.40 } },
+                        { title: "Mozzart", odds: { home: 2.30, draw: 3.10, away: 3.20 } }
+                    ]
+                }
+            ];
+
+            mockMatches.forEach(m => analyzeArbitrage(m));
+
+            simInterval = setInterval(() => {
+                mockMatches.forEach(m => {
+                    m.bookmakers.forEach(bm => {
+                        let change = 0.9 + Math.random() * 0.2;
+                        let oldVal = bm.odds.home;
+                        bm.odds.home = parseFloat((bm.odds.home * change).toFixed(2));
+                        if (change < 0.92) {
+                            checkDroppingOdds(m, oldVal, bm.odds.home, bm.title);
+                        }
+                    });
+                    analyzeArbitrage(m);
+                });
+            }, 10000);
+        }
+
+        function runManualCalculator() {
+            const stake = parseFloat(document.getElementById('calc-total-stake').value) || 10000;
+            const odds1 = parseFloat(document.getElementById('calc-odds-1').value) || 1.0;
+            const odds2 = parseFloat(document.getElementById('calc-odds-2').value) || 1.0;
+            const is3Way = document.getElementById('calc-three-way').checked;
+            const odds3 = is3Way ? (parseFloat(document.getElementById('calc-odds-3').value) || 1.0) : 0;
+
+            let margin = is3Way ? 
+                ((1 / odds1) + (1 / odds2) + (1 / odds3)) : 
+                ((1 / odds1) + (1 / odds2));
+
+            const profitPercent = ((1 / margin) - 1) * 100;
+            const isArb = margin < 1.0;
+
+            let stake1 = (1 / odds1) / margin * stake;
+            let stake2 = (1 / odds2) / margin * stake;
+            let stake3 = is3Way ? ((1 / odds3) / margin * stake) : 0;
+
+            const payout = stake * (1 / margin);
+            const netProfit = payout - stake;
+
+            const resultBox = document.getElementById('calc-result-box');
+            
+            let statusColor = isArb ? 'text-emerald-400 border-emerald-500/30 bg-[#0e1714]/80' : 'text-slate-400 border-slate-800 bg-slate-950/40';
+            let statusIcon = isArb ? 'check-circle' : 'alert-circle';
+            let statusText = isArb ? 'Matematički profit obezbeđen!' : 'Nije arbitraža (Zbir kvota ne donosi profit)';
+
+            resultBox.innerHTML = `
+                <div class="border rounded-xl p-3 flex items-center gap-3 ${statusColor}">
+                    <i data-lucide="${statusIcon}" class="w-5 h-5"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider">${statusText}</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block">Ukupni povraćaj:</span>
+                        <span class="text-lg font-bold text-white">${payout.toFixed(2)} RSD</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block">Čist profit:</span>
+                        <span class="text-lg font-bold ${isArb ? 'text-emerald-400' : 'text-slate-400'}">${netProfit.toFixed(2)} RSD (${profitPercent.toFixed(2)}%)</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2 text-xs">
+                    <h5 class="text-xs font-bold text-slate-300">Kako rasporediti uloge:</h5>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center bg-slate-900/40 px-3 py-2 rounded-lg border border-slate-800">
+                            <span>Uplati na 1 (Kvota ${odds1.toFixed(2)}):</span>
+                            <span class="font-bold text-slate-200">${stake1.toFixed(0)} RSD</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-900/40 px-3 py-2 rounded-lg border border-slate-800">
+                            <span>Uplati na 2 (Kvota ${odds2.toFixed(2)}):</span>
+                            <span class="font-bold text-slate-200">${stake2.toFixed(0)} RSD</span>
+                        </div>
+                        ${is3Way ? `
+                        <div class="flex justify-between items-center bg-slate-900/40 px-3 py-2 rounded-lg border border-slate-800">
+                            <span>Uplati na X (Kvota ${odds3.toFixed(2)}):</span>
+                            <span class="font-bold text-slate-200">${stake3.toFixed(0)} RSD</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function openInCalculator(arb) {
+            switchTab('calculator');
+            document.getElementById('calc-odds-1').value = arb.outcomes[0].odds;
+            document.getElementById('calc-odds-2').value = arb.outcomes[1].odds;
+
+            const is3w = arb.is3Way;
+            const chk = document.getElementById('calc-three-way');
+            chk.checked = is3w;
+            toggleCalcThreeWay();
+
+            if (is3w) {
+                document.getElementById('calc-odds-3').value = arb.outcomes[1].odds;
+                document.getElementById('calc-odds-2').value = arb.outcomes[2].odds;
+            }
+            
+            runManualCalculator();
+        }
+
+        function toggleCalcThreeWay() {
+            const container = document.getElementById('calc-odds-3-container');
+            const chk = document.getElementById('calc-three-way');
+            if (chk.checked) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+            runManualCalculator();
+        }
+
+        function switchTab(tabId) {
+            const tabs = ['arbitrage', 'drops', 'calculator'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).className = "px-5 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all";
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            
+            let color = 'border-emerald-500';
+            if (tabId === 'drops') color = 'border-rose-500';
+            if (tabId === 'calculator') color = 'border-blue-500';
+
+            document.getElementById(`tab-btn-${tabId}`).className = `px-5 py-3 text-xs font-bold border-b-2 ${color} text-white flex items-center gap-2 transition-all`;
+        }
+
+        function updateFilters() {
+            minArbitrageProfit = parseFloat(document.getElementById('range-min-arb').value);
+            document.getElementById('lbl-min-arb').innerText = `${minArbitrageProfit}%`;
+
+            minDropPercent = parseInt(document.getElementById('range-min-drop').value);
+            document.getElementById('lbl-min-drop').innerText = `${minDropPercent}%`;
+
+            soundAlertsEnabled = document.getElementById('chk-audio').checked;
+            ttsAlertsEnabled = document.getElementById('chk-tts').checked;
+        }
+
+        function logToTerminal(msg) {
+            let div = document.createElement('div');
+            div.innerText = msg;
+            logsContainer.appendChild(div);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            logsContainer.innerHTML = '<div>[SISTEM] Logovi očišćeni.</div>';
+        }
+
+        function clearArbitrageTable() {
+            arbitrageMatches = [];
+            updateArbitrageTable();
+            logToTerminal("[SYSTEM] Lista arbitražnih kvota očišćena.");
+        }
+
+        function clearDropsTable() {
+            detectedDrops = [];
+            updateDropsTable();
+            logToTerminal("[SYSTEM] Lista padova kvota očišćena.");
+        }
+    </script>
 </body>
 </html>
